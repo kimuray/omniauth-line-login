@@ -1,8 +1,2 @@
-require "omniauth/line/login/version"
-
-module Omniauth
-  module LineLogin
-      class Error < StandardError; end
-      # Your code goes here...
-  end
-end
+require "omniauth/line_login/version"
+require "omniauth/strategies/line_login"
