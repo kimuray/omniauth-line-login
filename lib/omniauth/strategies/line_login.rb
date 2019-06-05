@@ -8,6 +8,7 @@ module OmniAuth
       API_URL = "https://api.line.me"
 
       option :name, "line_login"
+      option :scope, "profile email openid"
       option :authorize_option, %i[scope prompt bot_prompt]
 
       option :client_options, {
@@ -16,7 +17,16 @@ module OmniAuth
         token_url: "/oauth2/v2.1/token"
       }
 
-      uid { raw_info['userId'] }
+      uid { decode_id_token['sub'] }
+
+      info do
+        {
+          email: decode_id_token['email'],
+          name: raw_info['displayName'],
+          image: raw_info['pictureUrl'],
+          description: raw_info['statusMessage']
+        }
+      end
 
       attr_accessor :id_token
 
@@ -47,7 +57,13 @@ module OmniAuth
       end
 
       def raw_info
-        {}
+        @raw_info ||= JSON.load(access_token.get('v2/profile').body)
+      rescue ::Errno::ETIMEDOUT
+        raise ::Timeout::Error
+      end
+
+      def decode_id_token
+        JWT.decode(self.id_token, nil, false).first
       end
     end
   end
